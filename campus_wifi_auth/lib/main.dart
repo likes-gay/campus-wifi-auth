@@ -1,11 +1,36 @@
 // ignore_for_file: unused_import
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:campus_wifi_auth/enums.dart';
 import 'package:campus_wifi_auth/requests.dart';
+import 'package:window_manager/window_manager.dart';
 
-void main() {
+// Pages
+import 'package:campus_wifi_auth/pages/credentials.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    await windowManager.ensureInitialized();
+    WindowOptions windowOptions = const WindowOptions(
+      size: Size(190, 200),
+      center: true,
+      backgroundColor: Colors.transparent,
+      skipTaskbar: false,
+      titleBarStyle: TitleBarStyle.normal,
+      title: 'Campus Wi-Fi Auth',
+    );
+    windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+      await windowManager.setResizable(false);
+    });
+  }
+
   runApp(ChangeNotifierProvider(
       create: (context) => LoginState(), child: const MyApp()));
 }
@@ -16,7 +41,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-        title: 'Campus Wi-Fi Auth', home: navigationAndContent());
+        title: 'Campus Wi-Fi Auth', home: NavigationAndContent());
   }
 }
 
@@ -50,14 +75,14 @@ class LoginState extends ChangeNotifier {
   }
 }
 
-class navigationAndContent extends StatefulWidget {
-  const navigationAndContent({super.key});
+class NavigationAndContent extends StatefulWidget {
+  const NavigationAndContent({super.key});
 
   @override
-  State<navigationAndContent> createState() => _navigationAndContentState();
+  State<NavigationAndContent> createState() => _NavigationAndContentState();
 }
 
-class _navigationAndContentState extends State<navigationAndContent> {
+class _NavigationAndContentState extends State<NavigationAndContent> {
   int selectedIndex = 0;
 
   @override
@@ -66,9 +91,9 @@ class _navigationAndContentState extends State<navigationAndContent> {
 
     switch (selectedIndex) {
       case 0:
-        pageContent = const togglePage();
+        pageContent = const TogglePage();
       case 1:
-        pageContent = const credsPage();
+        pageContent = const CredsPage();
       default:
         return const Placeholder();
     }
@@ -99,42 +124,38 @@ class _navigationAndContentState extends State<navigationAndContent> {
   }
 }
 
-class togglePage extends StatelessWidget {
-  const togglePage({super.key});
+class TogglePage extends StatelessWidget {
+  const TogglePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return const Column(
-      children: [loginLogoutButton()],
+      children: [LoginLogoutButton()],
     );
   }
 }
 
-class credsPage extends StatelessWidget {
-  const credsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Column(
-      children: [Text("Creds Page")],
-    );
-  }
-}
-
-class loginLogoutButton extends StatelessWidget {
-  const loginLogoutButton({super.key});
+class LoginLogoutButton extends StatelessWidget {
+  const LoginLogoutButton({super.key});
 
   @override
   Widget build(BuildContext context) {
     final loginState = Provider.of<LoginState>(context);
-    return Column(children: [
-      IconButton(
-          icon: const Icon(Icons.power_settings_new),
-          iconSize: 300,
-          onPressed: () {
-            loginState.toggle();
-          }),
-      Text(loginState.isLoggedIn ? 'Logged In' : 'Logged Out')
-    ]);
+    return Expanded(
+      child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            FittedBox(
+              child: IconButton(
+                icon: const Icon(Icons.power_settings_new),
+                onPressed: () {
+                  loginState.toggle();
+                },
+              ),
+            ),
+            Text(loginState.isLoggedIn ? 'Logged In' : 'Logged Out')
+          ]),
+    );
   }
 }
