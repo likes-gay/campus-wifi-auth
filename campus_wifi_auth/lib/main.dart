@@ -1,74 +1,140 @@
+// ignore_for_file: unused_import
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:campus_wifi_auth/enums.dart';
+import 'package:campus_wifi_auth/requests.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(ChangeNotifierProvider(
+      create: (context) => LoginState(), child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-        title: 'Campus Wi-Fi Auth',
-        home: Scaffold(
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                loginLogoutButton(),
-              ],
-            ),
+        title: 'Campus Wi-Fi Auth', home: navigationAndContent());
+  }
+}
+
+class LoginState extends ChangeNotifier {
+  bool _isLoggedIn = false;
+
+  bool get isLoggedIn => _isLoggedIn;
+
+  set isLoggedIn(bool value) {
+    _isLoggedIn = value;
+    notifyListeners();
+  }
+
+  void login() {
+    _isLoggedIn = true;
+    notifyListeners();
+  }
+
+  void logout() {
+    _isLoggedIn = false;
+    notifyListeners();
+  }
+
+  void toggle() {
+    print('Toggling');
+    if (_isLoggedIn) {
+      logout();
+    } else {
+      login();
+    }
+  }
+}
+
+class navigationAndContent extends StatefulWidget {
+  const navigationAndContent({super.key});
+
+  @override
+  State<navigationAndContent> createState() => _navigationAndContentState();
+}
+
+class _navigationAndContentState extends State<navigationAndContent> {
+  int selectedIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget pageContent;
+
+    switch (selectedIndex) {
+      case 0:
+        pageContent = const togglePage();
+      case 1:
+        pageContent = const credsPage();
+      default:
+        return const Placeholder();
+    }
+
+    return Scaffold(
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: selectedIndex,
+        onTap: (int index) {
+          setState(() {
+            selectedIndex = index;
+          });
+        },
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.toggle_on),
+            label: 'Toggle',
           ),
-        ));
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_circle),
+            label: 'Credentials',
+          ),
+        ],
+      ),
+      body: Center(
+        child: pageContent,
+      ),
+    );
   }
 }
 
 class togglePage extends StatelessWidget {
-  const togglePage({Key? key}) : super(key: key);
+  const togglePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [Text("Toggle Page")],
+    return const Column(
+      children: [loginLogoutButton()],
     );
   }
 }
 
 class credsPage extends StatelessWidget {
-  const credsPage({Key? key}) : super(key: key);
+  const credsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       children: [Text("Creds Page")],
     );
   }
 }
 
-class loginLogoutButton extends StatefulWidget {
-  const loginLogoutButton({Key? key}) : super(key: key);
-
-  @override
-  State<loginLogoutButton> createState() => _loginLogoutButtonState();
-}
-
-class _loginLogoutButtonState extends State<loginLogoutButton> {
-  var buttonPressedCount = 0;
+class loginLogoutButton extends StatelessWidget {
+  const loginLogoutButton({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final loginState = Provider.of<LoginState>(context);
     return Column(children: [
       IconButton(
           icon: const Icon(Icons.power_settings_new),
           iconSize: 300,
           onPressed: () {
-            print('Button pressed');
-            setState(() {
-              buttonPressedCount++;
-            });
+            loginState.toggle();
           }),
-      Text('button pressed $buttonPressedCount times')
+      Text(loginState.isLoggedIn ? 'Logged In' : 'Logged Out')
     ]);
   }
 }
